@@ -1,7 +1,9 @@
+from typing import List
+
 from PIL import Image
 
 from counter.debug import draw
-from counter.domain.models import CountResponse
+from counter.domain.models import CountResponse, Prediction
 from counter.domain.ports import ObjectDetector, ObjectCountRepo
 from counter.domain.predictions import over_threshold, count
 
@@ -31,3 +33,13 @@ class CountDetectedObjects:
             image = Image.open(image)
             draw(predictions, image, image_name)
 
+
+class ListPredictions:
+    """Returns every detected object whose score reaches the threshold."""
+
+    def __init__(self, object_detector: ObjectDetector):
+        self.__object_detector = object_detector
+
+    def execute(self, image, threshold: float) -> List[Prediction]:
+        predictions = self.__object_detector.predict(image)
+        return list(over_threshold(predictions, threshold=threshold))
