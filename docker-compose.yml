@@ -1,0 +1,42 @@
+services:
+  tfserving:
+    image: tensorflow/serving
+    container_name: tfserving
+    ports:
+      - "8501:8501"
+    environment:
+      MODEL_NAME: ssd_mobilenet_v2
+    volumes:
+      - ./tmp/model:/models
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: counter-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    container_name: counter-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: counter
+      POSTGRES_PASSWORD: counter
+      POSTGRES_DB: counter
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U counter"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+  postgres-data:
