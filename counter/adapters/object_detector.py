@@ -40,9 +40,9 @@ class TFSObjectDetector(ObjectDetector):
 
     @staticmethod
     def __to_np_array(image: BinaryIO):
-        image_ = Image.open(image)
-        (im_width, im_height) = image_.size
-        return np.array(image_.getdata()).reshape((im_height, im_width, 3)).astype(np.uint8)
+        # The model expects 3 colour channels (RGB). PNGs with transparency (RGBA),
+        # grayscale and palette images have a different number, so convert first.
+        return np.asarray(Image.open(image).convert("RGB"), dtype=np.uint8)
 
     def __raw_predictions_to_domain(self, raw_predictions: dict) -> List[Prediction]:
         print("Parsing raw predictions...")

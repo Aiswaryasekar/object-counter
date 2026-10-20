@@ -1,8 +1,13 @@
 from io import BytesIO
 
 from flask import Flask, request, jsonify
+from PIL import Image, UnidentifiedImageError
 
 from counter import config
+
+
+class InvalidRequest(Exception):
+    """The caller sent something we cannot work with (answered with HTTP 400)."""
 
 
 def create_app():
@@ -11,6 +16,10 @@ def create_app():
 
     count_action = config.get_count_action()
     predictions_action = config.get_predictions_action()
+
+    @app.errorhandler(InvalidRequest)
+    def handle_invalid_request(error):
+        return jsonify(error=str(error)), 400
 
     @app.route('/object-count', methods=['POST'])
     def object_detection():
@@ -27,11 +36,36 @@ def create_app():
 
 
 def read_image_and_threshold():
-    threshold = float(request.form.get('threshold', 0.5))
-    uploaded_file = request.files['file']
+    return read_image(), read_threshold()
+
+
+def read_threshold() -> float:
+    raw_threshold = request.form.get('threshold', 0.5)
+    try:
+        threshold = float(raw_threshold)
+    except ValueError:
+        raise InvalidRequest(f"threshold must be a number between 0 and 1, got '{raw_threshold}'")
+    if not 0 <= threshold <= 1:
+        raise InvalidRequest(f"threshold must be between 0 and 1, got {threshold}")
+    return threshold
+
+
+def read_image() -> BytesIO:
+    if 'file' not in request.files:
+        raise InvalidRequest("an image must be sent in the multipart form field 'file'")
     image = BytesIO()
-    uploaded_file.save(image)
-    return image, threshold
+    request.files['file'].save(image)
+    ensure_is_image(image)
+    return image
+
+
+def ensure_is_image(image: BytesIO):
+    try:
+        Image.open(image).verify()
+    except (UnidentifiedImageError, OSError):
+        raise InvalidRequest("the uploaded file is not a valid image")
+    finally:
+        image.seek(0)
 
 
 if __name__ == '__main__':

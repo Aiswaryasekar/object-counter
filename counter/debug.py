@@ -4,6 +4,7 @@ from PIL import ImageDraw, ImageFont
 
 
 def draw(predictions, image, image_name):
+    image = image.convert("RGB")  # JPEG cannot store transparency; drawing needs a known mode
     draw_image = ImageDraw.Draw(image, "RGBA")
 
     image_width, image_height = image.size
