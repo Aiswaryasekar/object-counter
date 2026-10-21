@@ -4,7 +4,7 @@ VENV   := .venv
 BIN    := $(VENV)/bin
 export PYTHONPATH := .
 
-.PHONY: help install model up down logs run run-prod test clean
+.PHONY: help install model up down logs run run-prod test test-e2e clean
 
 help: ## Show available commands
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk -F':.*?## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -34,8 +34,11 @@ run: install ## Run the API with fakes (no Docker needed)
 run-prod: install ## Run the API against the real services (run `make up` first)
 	ENV=prod $(BIN)/python -m counter.entrypoints.webapp
 
-test: install ## Run the test suite
+test: install ## Run the fast tests (no Docker needed; PostgreSQL tests skip if it is down)
 	$(BIN)/pytest
+
+test-e2e: install ## Run end-to-end tests against the real model and database (run `make up` first)
+	$(BIN)/pytest -m e2e
 
 clean: ## Remove venv, caches and debug images
 	rm -rf $(VENV) .pytest_cache tmp/debug
