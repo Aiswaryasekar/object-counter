@@ -1,7 +1,14 @@
 .DEFAULT_GOAL := help
-PYTHON ?= python3
 VENV   := .venv
-BIN    := $(VENV)/bin
+
+# Windows (run make from Git Bash) puts the virtualenv programs in Scripts/, and has no python3.
+ifeq ($(OS),Windows_NT)
+    PYTHON ?= python
+    BIN    := $(VENV)/Scripts
+else
+    PYTHON ?= python3
+    BIN    := $(VENV)/bin
+endif
 export PYTHONPATH := .
 
 .PHONY: help install model up down logs run run-prod test test-e2e clean
@@ -17,7 +24,7 @@ $(BIN)/activate: requirements.txt
 install: $(BIN)/activate ## Create virtualenv and install dependencies
 
 model: ## Download the detection model into tmp/model
-	./scripts/download_model.sh
+	bash scripts/download_model.sh
 
 up: model ## Start TF Serving, MongoDB and PostgreSQL in Docker
 	docker compose up -d
