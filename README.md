@@ -43,6 +43,7 @@ Invalid input (non-numeric or out-of-range threshold, missing file, file that is
 - Python 3.10 or newer
 - Docker (Docker Desktop on Windows/macOS)
 - `make` (optional, see the manual commands below if you do not have it; on Windows use WSL or Git Bash)
+- I developed this on Windows and used the manual commands. The Makefile was only dry-run checked, not tried on Linux or macOS
 
 ## Quick start
 
